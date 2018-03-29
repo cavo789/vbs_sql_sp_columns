@@ -1,0 +1,1 @@
+cscript.exe sql_sp_columns.vbs "servername" "dbname" "login" "password"

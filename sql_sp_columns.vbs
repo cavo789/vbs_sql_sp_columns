@@ -123,10 +123,15 @@ Public Sub CreateTextFile(ByVal sFileName, ByVal sContent)
 
 	Set objStream = CreateObject("ADODB.Stream")
 
-	objStream.CharSet = "utf-8"
-	objStream.Open
-	objStream.WriteText Replace(sContent, vbCrLf, vbLf)
-	objStream.SaveToFile sFileName, 2
+	With objStream
+		.Open
+		.CharSet = "x-ansi" ' "UTF-8"
+		.LineSeparator = 10
+		.Type = 2 ' adTypeText
+		.WriteText sContent
+		.SaveToFile sFileName, 2
+		.Close
+	End with
 
 	set objStream = Nothing
 
@@ -134,7 +139,7 @@ End Sub
 
 Dim sDSN, sSQL
 Dim objConn, rsTables, rs, fld
-Dim sLine, sPath, sFileName, sTableName, sCSV, sContent
+Dim sLine, sPath, sFileName, sTableName, sCSV, sContent, sMDTable
 Dim wFilesCount
 
 	' Get constants
@@ -211,15 +216,16 @@ Dim wFilesCount
 			If Not rs.Eof Then
 
 				sCSV = ""
+				sMDTable = ""
 				sLine = ""
 
 				' Derive the filename :
 				'	* The database name (f.i. dbAdmin)
 				'	* The schema (f.i. dbo)
 				'	* The table name (f.i. tblName)
-				sTableName = rs.Fields("TABLE_QUALIFIER").Value & "." & _
-					rs.Fields("TABLE_OWNER").Value & "." & _
-						rs.Fields("TABLE_NAME").Value
+				sTableName = rs.Fields("TABLE_QUALIFIER").Value & _
+					"." & rs.Fields("TABLE_OWNER").Value & _
+					"." & rs.Fields("TABLE_NAME").Value
 
 				sFileName = sPath & replace(sTableName, ".", "_") & ".csv"
 
@@ -234,6 +240,13 @@ Dim wFilesCount
 				' the column's headers
 				sCSV = sLine & vbCrLf
 
+				' And do the same for the Markdown table
+				' Prepare the table declaration
+
+				sMDTable = "| # | Name | Type | Length | " & _
+				 	"IsNullable |" & vbLF & _
+					"| --- | --- | --- | --- | --- |" & vbLF
+
 				Do While Not rs.EOF
 
 					sLine = ""
@@ -245,6 +258,14 @@ Dim wFilesCount
 
 					' sLine is a data row, add it into the CSV content
 					sCSV = sCSV & sLine & vbCrLf
+
+					sMDTable = sMDTable & _
+						"| " & rs.Fields("Ordinal_Position").Value & _
+						" | " & rs.Fields("Column_Name").Value & _
+						" | " & rs.Fields("Type_Name").Value & _
+						" | " & rs.Fields("Precision").Value & _
+						" | " & rs.Fields("Is_Nullable").Value & _
+						" |" & vbLf
 
 					rs.MoveNext
 
@@ -264,9 +285,14 @@ Dim wFilesCount
 			' --------------------------------------
 			' For documentation only purposes
 			' Create a .md file by table
+			' Draw a table within the .md file with very columns
+			' and add an hyperlink to the .csv file to get
+			' the full table
 			sFileName = sPath & replace(sTableName, ".", "_") & ".md"
-			sContent = "# " & sTableName & vbLf & vbLf & _
-				"%CSV .files/" & replace(sTableName, ".", "_") & ".csv%"
+			sContent = "# Table structure" & vbLf & vbLf & _
+				"%LASTUPDATE%" & vbLf & vbLf & _
+				sMDTable & vbLf & _
+				"[Full description](%URL%.files/" & replace(sTableName, ".", "_") & ".csv)" & vbLf
 			Call CreateTextFile(sFileName, sContent)
 			' --------------------------------------
 

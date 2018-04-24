@@ -289,10 +289,10 @@ Dim wFilesCount
 			' and add an hyperlink to the .csv file to get
 			' the full table
 			sFileName = sPath & replace(sTableName, ".", "_") & ".md"
-			sContent = "# Table structure" & vbLf & vbLf & _
+			sContent = "# Table structure " & vbLf & vbLf & _
 				"%LASTUPDATE%" & vbLf & vbLf & _
 				sMDTable & vbLf & _
-				"[Full description](%URL%.files/" & replace(sTableName, ".", "_") & ".csv)" & vbLf
+				"[Full description](%URL%" & replace(sTableName, ".", "_") & ".csv)" & vbLf
 			Call CreateTextFile(sFileName, sContent)
 			' --------------------------------------
 

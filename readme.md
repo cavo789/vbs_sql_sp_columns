@@ -1,6 +1,6 @@
-![Banner](images/banner.jpg)
-
 # SQL Server - Document tables, extract structure as CSV file
+
+![Banner](./banner.svg)
 
 > Connect to SQL Server, iterate every tables and generate a .csv file by table containing the table's structure
 
